@@ -1,5 +1,6 @@
-import  { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Download, Clipboard, Zap, Film, Shield, AlertCircle, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function InstagramReelDownloader() {
   const [url, setUrl] = useState('');
@@ -17,15 +18,14 @@ export default function InstagramReelDownloader() {
   };
 
   const showError = (message) => {
-    setError(message);
+    toast.error(message)
     setSuccess('');
-    setTimeout(() => setError(''), 5000);
   };
 
   const showSuccess = (message) => {
-    setSuccess(message);
+    toast.success(message);
     setError('');
-    setTimeout(() => setSuccess(''), 3000);
+
   };
 
   const pasteFromClipboard = async () => {
@@ -53,59 +53,51 @@ export default function InstagramReelDownloader() {
       return;
     }
 
-    setIsDownloading(true);
-    console.log(url)
 
+    setIsDownloading(true)
     try {
-      const response = await fetch("https://reel-grab-be.vercel.app/reel",{
-        method:"POST",
-        headers:{
+      const response = await fetch("https://reel-grab-be.vercel.app/reel", {
+        method: "POST",
+        headers: {
           "Content-Type": "application/json"
         },
-        body:JSON.stringify({
-          url:url
+        body: JSON.stringify({
+          url: url
         })
       })
       const data = await response.json()
-      // console.log(data)
-     
-      const videoUrl=data?.msg?.video[0]?.video
-      if(videoUrl){
-         const response = await fetch(videoUrl);
-        const blob = await response.blob();
+      if (data.success) {
+        toast('Download Started!',
+          {
+            icon: '👏',
+            style: {
+              borderRadius: '10px',
+              background: '#333',
+              color: '#fff',
+            },
+          }
+        );
+        const videoUrl = data?.msg?.video[0]?.video
+        if (videoUrl) {
+          const response = await fetch(videoUrl);
+          const blob = await response.blob();
           const downloadUrl = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
-          a.href= downloadUrl
+          a.href = downloadUrl
           a.download = 'instagram-reel.mp4';
           a.click()
           showSuccess('Reel downloaded successfully!');
-      }
-      alert("video not found")
+        }
+        else {
+          showError("Video URl is not Found")
+        }
 
-      
-      // In real implementation:
-      /*
-      const response = await fetch('/api/download', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: trimmedUrl })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Download failed');
       }
-      
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = 'instagram-reel.mp4';
-      a.click();
-      window.URL.revokeObjectURL(downloadUrl);
-      */
-      
+      else {
+        showError(data.msg)
+      }
+
+
     } catch (error) {
       showError('Failed to download reel. Please try again.');
       console.error('Download error:', error);
@@ -125,7 +117,7 @@ export default function InstagramReelDownloader() {
       {/* Main Container */}
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="max-w-4xl mx-auto w-full">
-          
+
           {/* Header */}
           <div className="text-center mb-8 sm:mb-12">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-3 sm:mb-4">
@@ -140,14 +132,14 @@ export default function InstagramReelDownloader() {
 
           {/* Main Card */}
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 lg:p-12 shadow-2xl border border-white/20 transform hover:scale-[1.02] transition-all duration-300 mb-8 sm:mb-12">
-            
+
             {/* Input Section */}
             <div className="space-y-6">
               <div>
                 <label htmlFor="reelUrl" className="block text-lg font-semibold text-gray-700 mb-4">
                   Enter Instagram Reel URL
                 </label>
-                
+
                 <div className="relative">
                   <input
                     ref={inputRef}
@@ -161,7 +153,7 @@ export default function InstagramReelDownloader() {
                     placeholder="https://www.instagram.com/reel/..."
                     autoComplete="off"
                   />
-                  
+
                   <button
                     onClick={pasteFromClipboard}
                     disabled={isDownloading}
@@ -191,28 +183,12 @@ export default function InstagramReelDownloader() {
                   </>
                 )}
               </button>
-
-              {/* Error Message */}
-              {error && (
-                <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
-                  <AlertCircle size={20} />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Success Message */}
-              {success && (
-                <div className="flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl">
-                  <CheckCircle size={20} />
-                  <span>{success}</span>
-                </div>
-              )}
             </div>
           </div>
 
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            
+
             <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 sm:p-8 text-center text-white hover:transform hover:-translate-y-2 transition-all duration-300">
               <div className="text-4xl sm:text-5xl mb-4">
                 <Zap className="mx-auto text-yellow-400" size={48} />
